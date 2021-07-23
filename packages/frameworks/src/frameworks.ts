@@ -1582,6 +1582,58 @@ export const frameworks = [
     getOutputDirName: async () => 'dist',
   },
   {
+    name: 'Astro',
+    slug: 'astro',
+    demo: 'https://astro.examples.vercel.com',
+    logo: 'https://raw.githubusercontent.com/vercel/vercel/main/packages/frameworks/logos/astro.svg',
+    tagline:
+      'Astro is a next-generation static site generator that mixes lightning-fast performance with modern developer experience.',
+    description: 'An Astro site, using the default starter kit.',
+    website: 'https://astro.build',
+    envPrefix: 'SNOWPACK_PUBLIC_',
+    detectors: {
+      every: [
+        {
+          path: 'package.json',
+          matchContent:
+            '"(dev)?(d|D)ependencies":\\s*{[^}]*"astro":\\s*".+?"[^}]*}',
+        },
+      ],
+    },
+    settings: {
+      installCommand: {
+        placeholder: '`yarn install` or `npm install`',
+      },
+      buildCommand: {
+        placeholder: '`npm run build` or `astro build`',
+      },
+      devCommand: {
+        value: 'astro dev',
+      },
+      outputDirectory: {
+        value: 'dist',
+      },
+    },
+    dependency: 'astro',
+    devCommand: 'astro dev',
+    buildCommand: 'astro build',
+    getOutputDirName: async () => 'dist',
+    defaultRoutes: [
+      {
+        src: '^/_astro/(.*)\\.css$',
+        headers: { 'cache-control': 'public,max-age=31536000,immutable' },
+        continue: true,
+      },
+      {
+        handle: 'filesystem',
+      },
+      {
+        src: '/(.*)',
+        dest: '/index.html',
+      },
+    ],
+  },
+  {
     name: 'Other',
     slug: null,
     logo: 'https://raw.githubusercontent.com/vercel/vercel/main/packages/frameworks/logos/other.svg',
