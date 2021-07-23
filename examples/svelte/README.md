@@ -1,19 +1,24 @@
 # Svelte Example
 
-This directory is a brief example of a [Svelte](https://svelte.dev/) app with [Serverless Functions](https://vercel.com/docs/v2/serverless-functions/introduction) that can be deployed with Vercel and zero configuration.
+This directory is a brief example of a [Svelte](https://svelte.dev/) site that can be deployed with Vercel and zero-configuration. If you need to use API Routes, we recommend using our [SvelteKit example](https://github.com/vercel/vercel/tree/main/examples/sveltekit).
 
 ## Deploy Your Own
 
-Deploy your own Svelte project, along with Serverless Functions, with Vercel.
-
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/vercel/vercel/tree/main/examples/svelte)
 
-_Live Example: https://svelte.now-examples.now.sh_
+_Live Example: https://svelte.examples.vercel.com_
 
-### How We Created This Example
+## Getting Started
 
-To get started with Svelte, along with [Serverless Functions](https://vercel.com/docs/v2/serverless-functions/introduction), deployed with Vercel, you can use [degit](https://github.com/Rich-Harris/degit) to initialize the project:
-
-```shell
-$ npx degit sveltejs/template my-svelte-project
+```bash
+npx degit sveltejs/template svelte-app
+npm install
 ```
+
+Then, start [Rollup](https://rollupjs.org):
+
+```bash
+npm run dev
+```
+
+Navigate to [localhost:5000](http://localhost:5000). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.

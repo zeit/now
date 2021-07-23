@@ -829,9 +829,9 @@ export const frameworks = [
     demo: 'https://svelte.examples.vercel.com',
     logo: 'https://raw.githubusercontent.com/vercel/vercel/main/packages/frameworks/logos/svelte.svg',
     tagline:
-      'Svelte lets you write high performance reactive apps with significantly less boilerplate. ',
+      'Svelte lets you write high performance reactive apps with significantly less boilerplate.',
     description:
-      'A Svelte app, using the Svelte template, and a Serverless Function API.',
+      'A basic Svelte app using the default template.',
     website: 'https://svelte.dev',
     detectors: {
       every: [
@@ -874,6 +874,43 @@ export const frameworks = [
         dest: '/index.html',
       },
     ],
+  },
+  {
+    name: 'SvelteKit',
+    slug: 'sveltekit',
+    demo: 'https://sveltekit.examples.vercel.com',
+    logo: 'https://raw.githubusercontent.com/vercel/vercel/main/packages/frameworks/logos/svelte.svg',
+    tagline:
+      'SvelteKit is a framework for building web applications of all sizes.',
+    description:
+      'A SvelteKit app optimized to work for serverless.',
+    website: 'https://kit.svelte.dev',
+    detectors: {
+      every: [
+        {
+          path: 'package.json',
+          matchContent:
+            '"(dev)?(d|D)ependencies":\\s*{[^}]*"@sveltejs\\/kit":\\s*".+?"[^}]*}',
+        },
+      ],
+    },
+    settings: {
+      installCommand: {
+        placeholder: '`yarn install` or `npm install`',
+      },
+      buildCommand: {
+        placeholder: '`npm run build` or `svelte-kit build`',
+      },
+      devCommand: {
+        placeholder: 'svelte-kit dev --port $PORT',
+      },
+      outputDirectory: {
+        placeholder: 'public',
+      },
+    },
+    devCommand: 'svelte-kit dev --port $PORT',
+    buildCommand: 'svelte-kit build',
+    getOutputDirName: async () => 'public',
   },
   {
     name: 'Ionic React',

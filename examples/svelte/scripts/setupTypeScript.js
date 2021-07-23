@@ -22,17 +22,17 @@ const projectRoot = argv[2] || path.join(__dirname, "..")
 // Add deps to pkg.json
 const packageJSON = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"))
 packageJSON.devDependencies = Object.assign(packageJSON.devDependencies, {
-  "svelte-check": "^1.0.0",
+  "svelte-check": "^2.0.0",
   "svelte-preprocess": "^4.0.0",
-  "@rollup/plugin-typescript": "^6.0.0",
-  "typescript": "^3.9.3",
+  "@rollup/plugin-typescript": "^8.0.0",
+  "typescript": "^4.0.0",
   "tslib": "^2.0.0",
-  "@tsconfig/svelte": "^1.0.0"
+  "@tsconfig/svelte": "^2.0.0"
 })
 
 // Add script for checking
 packageJSON.scripts = Object.assign(packageJSON.scripts, {
-  "validate": "svelte-check"
+  "check": "svelte-check --tsconfig ./tsconfig.json"
 })
 
 // Write the package JSON
@@ -62,22 +62,11 @@ import typescript from '@rollup/plugin-typescript';`)
 // Replace name of entry point
 rollupConfig = rollupConfig.replace(`'src/main.js'`, `'src/main.ts'`)
 
-// Add preprocess to the svelte config, this is tricky because there's no easy signifier.
-// Instead we look for `css:` then the next `}` and add the preprocessor to that
-let foundCSS = false
-let match
-
-// https://regex101.com/r/OtNjwo/1
-const configEditor = new RegExp(/css:.|\n*}/gmi)
-while (( match = configEditor.exec(rollupConfig)) != null) {
-  if (foundCSS) {
-    const endOfCSSIndex = match.index + 1
-    rollupConfig = rollupConfig.slice(0, endOfCSSIndex) + ",\n			preprocess: sveltePreprocess()," + rollupConfig.slice(endOfCSSIndex);
-    break
-  }
-  if (match[0].includes("css:")) foundCSS = true
-}
-
+// Add preprocessor
+rollupConfig = rollupConfig.replace(
+  'compilerOptions:',
+  'preprocess: sveltePreprocess({ sourceMap: !production }),\n\t\t\tcompilerOptions:'
+);
 
 // Add TypeScript
 rollupConfig = rollupConfig.replace(
@@ -95,6 +84,10 @@ const tsconfig = `{
 }`
 const tsconfigPath =  path.join(projectRoot, "tsconfig.json")
 fs.writeFileSync(tsconfigPath, tsconfig)
+
+// Add global.d.ts
+const dtsPath =  path.join(projectRoot, "src", "global.d.ts")
+fs.writeFileSync(dtsPath, `/// <reference types="svelte" />`)
 
 // Delete this script, but not during testing
 if (!argv[2]) {
@@ -115,7 +108,7 @@ if (!argv[2]) {
 }
 
 // Adds the extension recommendation
-fs.mkdirSync(path.join(projectRoot, ".vscode"))
+fs.mkdirSync(path.join(projectRoot, ".vscode"), { recursive: true })
 fs.writeFileSync(path.join(projectRoot, ".vscode", "extensions.json"), `{
   "recommendations": ["svelte.svelte-vscode"]
 }
