@@ -1604,6 +1604,64 @@ export const frameworks = [
     buildCommand: null,
     getOutputDirName: async () => 'public',
   },
+  {
+    name: 'React Snowpack',
+    slug: 'react-snowpack',
+    demo: 'https://react-snowpack-delta.vercel.app',
+    logo:
+      'https://raw.githubusercontent.com/vercel/vercel/master/packages/frameworks/logos/react.svg',
+    tagline:
+      'Unlike traditional React application tooling, Snowpack saves you from getting bogged down with complex bundler setups and configuration files.',
+    description: 'A React app, bootstrapped with create-snowpack-app',
+    website: 'https://www.snowpack.dev/tutorials/react',
+    detectors: {
+      some: [
+        {
+          path: 'package.json',
+          matchContent:
+            '"(dev)?(d|D)ependencies":\\s*{[^}]*"@snowpack/plugin-react-refresh":\\s*".+?"[^}]*}',
+        },
+        {
+          path: 'package.json',
+          matchContent:
+            '"(dev)?(d|D)ependencies":\\s*{[^}]*"snowpack":\\s*".+?"[^}]*}',
+        },
+      ],
+    },
+    settings: {
+      installCommand: {
+        placeholder: '`yarn install` or `npm install`',
+      },
+      buildCommand: {
+        placeholder: '`npm run build` or `snowpack build`',
+      },
+      devCommand: {
+        value: 'snowpack dev',
+      },
+      outputDirectory: {
+        value: 'build',
+      },
+    },
+    dependency: '@snowpack/plugin-react-refresh',
+    devCommand: 'snowpack dev',
+    buildCommand: 'snowpack build',
+    getOutputDirName: async () => 'build',
+    defaultRoutes: [
+      {
+        src: '/static/(.*)',
+        headers: { 'cache-control': 's-maxage=31536000, immutable' },
+        continue: true,
+      },
+      {
+        handle: 'filesystem',
+      },
+      {
+        src: '/(.*)',
+        headers: { 'cache-control': 's-maxage=0' },
+        dest: '/index.html',
+      },
+    ],
+  },
 ] as const;
 
 const def = frameworks as readonly Framework[];
