@@ -8,8 +8,16 @@ import {
   readFile,
   writeFile,
 } from 'fs-extra';
+import { performance } from 'perf_hooks';
+import once from '@tootallnate/once';
+import { spawn } from 'child_process';
+import type {
+  BuildOptions,
+  StartDevServerOptions,
+  StartDevServerResult,
+} from '@vercel/build-utils';
+import type { Readable } from 'stream';
 import buildUtils from './build-utils';
-import { BuildOptions } from '@vercel/build-utils';
 const {
   download,
   getWriteableDirectory,
@@ -106,6 +114,12 @@ export async function build({
   const hasRootVendorDir = await pathExists(vendorDir);
   const hasRelativeVendorDir = await pathExists(relativeVendorDir);
   const hasVendorDir = hasRootVendorDir || hasRelativeVendorDir;
+  console.log({
+    relativeVendorDir,
+    hasRootVendorDir,
+    hasRelativeVendorDir,
+    vendorPath,
+  });
 
   if (hasRelativeVendorDir) {
     if (hasRootVendorDir) {
@@ -214,3 +228,193 @@ export async function build({
 
   return { output: lambda };
 }
+
+// const TMP = tmpdir();
+
+export async function startDevServer(
+  opts: StartDevServerOptions
+): Promise<StartDevServerResult> {
+  const mm: Record<string, number> = {};
+  const measure = (start: string, end?: string) => {
+    const now = performance.now();
+    if (end && mm[start]) {
+      console.log(`MEASURE ${start}-${end}: ${now - mm[start]}ms`);
+      mm[end] = now;
+    } else mm[start] = now;
+  };
+
+  measure('start');
+
+  const { entrypoint, workPath, meta = {} } = opts;
+  // const { devCacheDir = join(workPath, '.vercel', 'cache') } = meta;
+  // const entrypointDir = dirname(entrypoint);
+
+  // For some reason, if `entrypoint` is a path segment (filename contains `[]`
+  // brackets) then the `.rb` suffix on the entrypoint is missing. Fix that here…
+  // let entrypointWithExt = entrypoint;
+  // if (!entrypoint.endsWith('.rb')) {
+  //   entrypointWithExt += '.rb';
+  // }
+
+  const entrypointAbsolute = join(workPath, entrypoint);
+
+  const devServerRbPath = join(__dirname, '..', 'dev_server.rb');
+
+  // const originalRbPath = join(__dirname, '..', 'vc_init.rb');
+  // const originalHandlerRbContents = await readFile(originalRbPath, 'utf8');
+
+  // const userHandlerFilePath = entrypoint.replace(/\.rb$/, '');
+  // const nowHandlerRbContents = originalHandlerRbContents.replace(
+  //   /__VC_HANDLER_FILENAME/g,
+  //   userHandlerFilePath
+  // );
+
+  // // in order to allow the user to have `server.rb`, we need our `server.rb` to be called
+  // // somethig else
+  // const handlerRbFilename = 'vc__handler__ruby';
+
+  // await writeFile(
+  //   join(workPath, `${handlerRbFilename}.rb`),
+  //   nowHandlerRbContents
+  // );
+
+  // const tmp = join(
+  //   devCacheDir,
+  //   'ruby',
+  //   Math.random().toString(32).substring(2)
+  // );
+  // const tmpPackage = join(tmp, entrypointDir);
+  // await mkdirp(tmpPackage);
+
+  // await Promise.all([
+  //   copyEntrypoint(entrypointWithExt, tmpPackage),
+  //   copyDevServer(analyzed.functionName, tmpPackage),
+  // ]);
+
+  // const portFile = join(
+  //   TMP,
+  //   `vercel-dev-port-${Math.random().toString(32).substring(2)}`
+  // );
+
+  const env: typeof process.env = {
+    ...process.env,
+    ...meta.env,
+    // VERCEL_DEV_PORT_FILE: portFile,
+    VERCEL_DEV_HANDLER_FILE: entrypointAbsolute,
+  };
+
+  // const tmpRelative = `.${sep}${entrypointDir}`;
+  const child = spawn('bundle', ['exec', 'ruby', devServerRbPath], {
+    cwd: workPath,
+    env,
+    // TODO: get port from here??? RubyVM reserves FDs 4,5,6
+    stdio: ['inherit', 'pipe', 'inherit', 'pipe'],
+  });
+
+  // child.once('exit', () => {
+  //   retry(() => remove(tmp)).catch((err: Error) => {
+  //     console.error('Could not delete tmp directory: %j: %s', tmp, err);
+  //   });
+  // });
+
+  measure('start', 'spawned');
+
+  const portPipe = child.stdout;
+  if (!isReadable(portPipe)) {
+    throw new Error('File descriptor 1 is not readable');
+  }
+
+  // `dev_server.rb` writes to stdout to be consumed here
+  let first = true;
+  const onPort = new Promise<PortInfo>(resolve => {
+    portPipe.setEncoding('utf8');
+    portPipe.on('data', d => {
+      if (first) {
+        const str = d
+          .toString()
+          .trim()
+          .match(/RUBY_DEV_SERVER_PORT=(\d+)/)?.[1];
+        const port = str && Number(str);
+        measure('start', 'portPipe');
+        resolve({ port });
+        first = false;
+      } else {
+        process.stdout.write(d);
+      }
+    });
+  });
+  // const onPortFile = waitForPortFile(portFile);
+  const onExit = once.spread<[number, string | null]>(child, 'exit');
+  const result = await Promise.race([onPort, onExit]);
+  onExit.cancel();
+  // onPortFile.cancel();
+
+  measure('start', 'end');
+
+  if (isPortInfo(result)) {
+    return {
+      port: result.port,
+      pid: child.pid,
+    };
+  } else if (Array.isArray(result)) {
+    // Got "exit" event from child process
+    const [exitCode, signal] = result;
+    const reason = signal ? `"${signal}" signal` : `exit code ${exitCode}`;
+    throw new Error(
+      `\`bundle exec ruby ${devServerRbPath}\` failed with ${reason}`
+    );
+  } else {
+    console.log({ result });
+    throw new Error(`Unexpected result type: ${typeof result}`);
+  }
+}
+
+interface PortInfo {
+  port: number;
+}
+
+function isPortInfo(v: any): v is PortInfo {
+  return v && typeof v.port === 'number';
+}
+
+function isReadable(v: any): v is Readable {
+  return v && v.readable === true;
+}
+
+// TODO
+// async function retry<T>(fn: () => Promise<T>): Promise<T> {
+//   return fn();
+// }
+
+// export interface CancelablePromise<T> extends Promise<T> {
+//   cancel: () => void;
+// }
+
+// function waitForPortFile(portFile: string) {
+//   const opts = { portFile, canceled: false };
+//   const promise = waitForPortFile_(opts) as CancelablePromise<PortInfo | void>;
+//   promise.cancel = () => {
+//     opts.canceled = true;
+//   };
+//   return promise;
+// }
+
+// async function waitForPortFile_(opts: {
+//   portFile: string;
+//   canceled: boolean;
+// }): Promise<PortInfo | void> {
+//   while (!opts.canceled) {
+//     await new Promise(resolve => setTimeout(resolve, 100));
+//     try {
+//       const port = Number(await readFile(opts.portFile, 'ascii'));
+//       retry(() => remove(opts.portFile)).catch((err: Error) => {
+//         console.error('Could not delete port file: %j: %s', opts.portFile, err);
+//       });
+//       return { port };
+//     } catch (err) {
+//       if (err.code !== 'ENOENT') {
+//         throw err;
+//       }
+//     }
+//   }
+// }

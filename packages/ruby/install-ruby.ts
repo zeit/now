@@ -21,19 +21,16 @@ function getLatestRubyVersion(): RubyVersion {
 function getRubyPath(meta: Meta, gemfileContents: string) {
   let selection = getLatestRubyVersion();
   if (meta.isDev) {
-    throw new Error(
-      'Ruby is in the early alpha stage and does not support vercel dev at this time.'
-    );
+    console.log('ALL GOOD IN DEV!');
+    // throw new Error(
+    //   'Ruby is in the early alpha stage and does not support vercel dev at this time.'
+    // );
   } else if (gemfileContents) {
     const line = gemfileContents
       .split('\n')
       .find(line => line.startsWith('ruby'));
     if (line) {
-      const strVersion = line
-        .slice(4)
-        .trim()
-        .slice(1, -1)
-        .replace('~>', '');
+      const strVersion = line.slice(4).trim().slice(1, -1).replace('~>', '');
       const found = allOptions.some(o => {
         // The array is already in order so return the first
         // match which will be the newest version.
@@ -68,6 +65,30 @@ function getRubyPath(meta: Meta, gemfileContents: string) {
 // process.env.GEM_HOME), and returns
 // the absolute path to it
 export async function installBundler(meta: Meta, gemfileContents: string) {
+  if (meta.isDev) {
+    const gemHome = process.env.GEM_HOME;
+    if (!gemHome) throw new Error('Missing GEM_HOME env var');
+
+    const gemPath = 'do_not_use_gem_path'; // execa.sync('which', ['gem']).stdout;
+    const rubyPath = execa.sync('which', ['ruby']).stdout.trim();
+    const bundlerPath = execa.sync('which', ['bundle']).stdout.trim();
+    const vendorPath =
+      execa
+        .sync('bundle', ['config', 'path', '--parseable'])
+        .stdout.trim()
+        .split('=')[1] || 'vendor/bundle';
+
+    return {
+      gemHome,
+      rubyPath,
+      gemPath,
+      vendorPath: `${vendorPath}/ruby/2.6.0`,
+      bundlerPath,
+      // there's only one runtime in dev
+      runtime: 'ruby',
+    };
+  }
+
   const { gemHome, rubyPath, gemPath, vendorPath, runtime } = getRubyPath(
     meta,
     gemfileContents
