@@ -464,6 +464,9 @@ test('[vercel dev] `vercel.json` should be invalidated if deleted', async t => {
       // Env var should not be set after `vercel.json` is deleted
       await fs.remove(configPath);
 
+      // Allow some time for the filesystem watcher event to occur
+      await sleep(1000);
+
       const res = await fetch(`http://localhost:${port}/api`);
       const body = await res.json();
       t.is(body.FOO, undefined);

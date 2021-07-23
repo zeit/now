@@ -484,7 +484,7 @@ export async function shutdownBuilder(
 
   if (match.buildProcess) {
     const { pid } = match.buildProcess;
-    debug(`Killing builder sub-process with PID ${pid}`);
+    debug(`Killing ${match.use} sub-process with PID ${pid}`);
     const killPromise = treeKill(pid)
       .then(() => {
         debug(`Killed builder with PID ${pid}`);
@@ -503,6 +503,21 @@ export async function shutdownBuilder(
         ops.push(asset.fn.destroy());
       }
     }
+  }
+
+  const devServerResult = await match.devServerResultPromise;
+  if (devServerResult) {
+    const { pid } = devServerResult;
+    debug(`Killing ${match.use} dev server process with PID ${pid}`);
+    const killPromise = treeKill(pid)
+      .then(() => {
+        debug(`Killed builder with PID ${pid}`);
+      })
+      .catch((err: Error) => {
+        debug(`Failed to kill builder with PID ${pid}: ${err}`);
+      });
+    ops.push(killPromise);
+    delete match.devServerResultPromise;
   }
 
   await Promise.all(ops);
