@@ -62,7 +62,7 @@ export default async function glob(
         finalPath = path.join(mountpoint, finalPath);
       }
 
-      results[finalPath] = new FileFsRef({ mode: stat.mode, fsPath });
+      results[finalPath.replace(/\\/g, '/')] = new FileFsRef({ mode: stat.mode, fsPath });
     }
   }
 
