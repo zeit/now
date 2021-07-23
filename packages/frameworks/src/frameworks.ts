@@ -1582,6 +1582,44 @@ export const frameworks = [
     getOutputDirName: async () => 'dist',
   },
   {
+    name: 'NestJS',
+    slug: 'nestjs',
+    demo: 'https://nest.examples.vercel.com',
+    logo: 'https://raw.githubusercontent.com/vercel/vercel/main/packages/frameworks/logos/nest.svg',
+    tagline:
+      'Nest (NestJS) is a framework for building efficient, scalable Node.js server-side applications',
+    description: 'A Nest project, scaffolded with the Nest CLI.',
+    website: 'https://nestjs.com',
+    detectors: {
+      every: [
+        {
+          path: 'package.json',
+          matchContent:
+            '"(dev)?(d|D)ependencies":\\s*{[^}]*"@nestjs\\/(common|core|platform-express|cli|schematics|testing)?":\\s*".+?"[^}]*}',
+        },
+      ],
+    },
+    settings: {
+      installCommand: {
+        placeholder: '`yarn install` or `npm install`',
+      },
+      buildCommand: {
+        placeholder: '`npm run build` or `nest build`',
+      },
+      devCommand: {
+        value: '`npm run start:dev` or `nest start --watch`',
+      },
+      outputDirectory: {
+        value: 'dist',
+      },
+    },
+    dependency: '@nest/core',
+    devCommand: 'nest start --watch',
+    buildCommand: 'nest build',
+    getOutputDirName: async () => 'dist',
+    defaultRoutes: [{ src: '/(.*)', dest: 'dist/main.js' }],
+  },
+  {
     name: 'Other',
     slug: null,
     logo: 'https://raw.githubusercontent.com/vercel/vercel/main/packages/frameworks/logos/other.svg',
