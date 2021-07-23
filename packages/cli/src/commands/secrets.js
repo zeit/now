@@ -15,6 +15,7 @@ import { getPkgName, getCommandName } from '../util/pkg-name.ts';
 
 const help = () => {
   console.log(`
+  ${chalk.yellow(`DEPRECATED: Please use ${getPkgName()} env instead.`)}
   ${chalk.bold(`${logo} ${getPkgName()} secrets`)} [options] <command>
 
   ${chalk.dim('Commands:')}
@@ -135,8 +136,14 @@ async function run({ output, token, contextName, currentTeam, client }) {
   const args = argv._.slice(1);
   const start = Date.now();
   const { 'test-warning': testWarningFlag } = argv;
+  const commandName = getCommandName('secret ' + subcommand);
 
   if (subcommand === 'ls' || subcommand === 'list') {
+    output.warn(
+      `${commandName} is deprecated. Please use ${getCommandName(
+        'env ls'
+      )} instead.`
+    );
     if (args.length > 1) {
       console.error(
         error(
@@ -199,6 +206,11 @@ async function run({ output, token, contextName, currentTeam, client }) {
   }
 
   if (subcommand === 'rm' || subcommand === 'remove') {
+    output.warn(
+      `${commandName} is deprecated. Please use ${getCommandName(
+        'env rm'
+      )} instead.`
+    );
     if (args.length !== 1) {
       console.error(
         error(
@@ -241,6 +253,11 @@ async function run({ output, token, contextName, currentTeam, client }) {
   }
 
   if (subcommand === 'rename') {
+    output.warn(
+      `${commandName} is deprecated. Please use ${getCommandName(
+        'env rm'
+      )} and ${getCommandName('env add')} instead.`
+    );
     if (args.length !== 2) {
       console.error(
         error(
@@ -264,6 +281,11 @@ async function run({ output, token, contextName, currentTeam, client }) {
   }
 
   if (subcommand === 'add' || subcommand === 'set') {
+    output.warn(
+      `${commandName} is deprecated. Please use ${getCommandName(
+        'env add'
+      )} instead.`
+    );
     if (args.length !== 2) {
       console.error(
         error(
