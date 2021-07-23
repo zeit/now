@@ -2,50 +2,40 @@
   "private": true,
   "scripts": {
     "start": "umi dev",
-    "dev": "umi dev --port $PORT",
     "build": "umi build",
-    "test": "umi test",
-    "lint:es": "eslint --ext .js src mock tests",
-    "lint:ts": "tslint \"src/**/*.ts\" \"src/**/*.tsx\"",
-    "precommit": "lint-staged"
+    "postinstall": "umi generate tmp",
+    "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
+    "test": "umi-test",
+    "test:coverage": "umi-test --coverage"
   },
   "dependencies": {
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "@umijs/preset-react": "1.x",
+    "@umijs/test": "^3.2.3",
+    "lint-staged": "^10.0.7",
+    "prettier": "^1.19.1",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "umi": "^3.2.3",
+    "yorkie": "^2.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.12",
-    "@types/react": "^16.7.18",
-    "@types/react-dom": "^16.0.11",
+    "@umijs/test": "^3.2.3",
     "@types/react-test-renderer": "^16.0.3",
-    "babel-eslint": "^9.0.0",
-    "eslint": "^5.4.0",
-    "eslint-config-umi": "^1.4.0",
-    "eslint-plugin-flowtype": "^2.50.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^5.1.1",
-    "eslint-plugin-react": "^7.11.1",
     "husky": "^0.14.3",
-    "lint-staged": "^7.2.2",
-    "react-test-renderer": "^16.7.0",
-    "tslint": "^5.12.0",
-    "tslint-eslint-rules": "^5.4.0",
-    "tslint-react": "^3.6.0",
-    "umi": "^2.7.0",
-    "umi-plugin-react": "^1.8.0",
-    "umi-types": "^0.2.0"
+    "lint-staged": "^7.2.2"
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "tslint --fix",
-      "git add"
+    "*.{js,jsx,less,md,json}": [
+      "prettier --write"
     ],
-    "*.{js,jsx}": [
-      "eslint --fix",
-      "git add"
+    "*.ts?(x)": [
+      "prettier --parser=typescript --write"
     ]
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=10.0.0"
   }
 }

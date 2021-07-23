@@ -14,8 +14,9 @@ _Live Example: https://umijs.now-examples.now.sh_
 
 ### How We Created This Example
 
-To get started with UmiJS deployed with Vercel, you can use the [Umi CLI](https://github.com/umijs/create-umi) to initialize the project:
+To get started with UmiJS deployed with Vercel, you can use the [Umi](https://github.com/umijs/umi) to initialize the project:
 
 ```shell
-$ yarn create umi app-name
+$ mkdir app-name && cd app-name
+$ yarn create @umijs/umi-app
 ```
